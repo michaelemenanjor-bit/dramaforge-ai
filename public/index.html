@@ -1,1 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DramaForge AI — Real AI Studio</title>
 
+<style>
+body{
+margin:0;
+background:#090a0f;
+color:#f7f7f8;
+font-family:system-ui,-apple-system,Segoe UI,sans-serif
+}
+.wrap{
+max-width:950px;
+margin:auto;
+padding:16px
+}
+.brand{
+font-size:28px;
+font-weight:900
+}
+.brand span{
+color:#ffb52e
+}
+.muted{
+color:#a5a6af;
+line-height:1.5
+}
+.card{
+background:#15161e;
+border:1px solid #2b2d38;
+border-radius:18px;
+padding:17px;
+margin:14px 0
+}
+label{
+display:block;
+font-weight:750;
+margin:10px 0 6px
+}
+textarea,input,select{
+width:100%;
+box-sizing:border-box;
+background:#0d0e14;
+color:#fff;
+border:1px solid #383a46;
+border-radius:11px;
+padding:12px;
+font-size:15px
+}
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px
+}
+button{
+border:0;
+border-radius:11px;
+padding:12px 15px;
+font-weight:850;
+cursor:pointer
+}
+.primary{
+background:#ffb52e;
+color:#111;
+width:100%;
+margin-top:14px
+}
+.dark{
+background:#292b36;
+color:#fff;
+margin:4px
+}
+.gold{
+color:#ffd27a
+}
+.scene{
+border:1px solid #30313c;
+border-radius:14px;
+padding:14px;
+margin:10px 0;
+background:#101117
+}
+.box{
+background:#0b0c11;
+border:1px solid #272934;
+border-radius:10px;
+padding:10px;
+margin:8px 0
+}
+.mono{
+white-space:pre-wrap;
+line-height:1.55
+}
+.small{
+font-size:12px;
+color:#999ba5;
+line-height:1.5
+}
+.hidden{
+display:none
+}
+.status{
+color:#ffd27a;
+min-height:22px;
+margin-top:10px
+}
+.video{
+width:100%;
+max-height:600px;
+background:#000;
+border-radius:14px
+}
+.pill{
+display:inline-block;
+background:#292b36;
+padding:5px 8px;
+border-radius:999px;
+font-size:11px;
+margin:2px
+}
+@media(max-width:650px){
+.grid{
+grid-template-columns:1fr
+}
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<div class="brand">🎬 DramaForge <span>AI</span></div>
+
+<p class="muted">
+Real AI drama generation with a secure server-side API connection.
+Generate a screenplay, then render individual video clips.
+</p>
+
+<div class="card">
+
+<h2>Create Drama</h2>
+
+<label>Story idea</label>
+
+<textarea id="idea" placeholder="A poor Nigerian woman falls in love with a wealthy married businessman, but his wife discovers their secret."></textarea>
+
+<div class="grid">
+
+<div>
+<label>Genre</label>
+<select id="genre">
+<option>Romance & Suspense</option>
+<option>Romance</option>
+<option>Family Drama</option>
+<option>Thriller</option>
+<option>Comedy Drama</option>
+</select>
+</div>
+
+<div>
+<label>Length</label>
+<select id="length">
+<option>3 minutes</option>
+<option>5 minutes</option>
+<option>8 minutes</option>
+<option>10 minutes</option>
+</select>
+</div>
+
+<div>
+<label>Setting</label>
+<input id="setting" value="Modern Nigeria">
+</div>
+
+<div>
+<label>Format</label>
+<select id="format">
+<option>Vertical 9:16</option>
+<option>Widescreen 16:9</option>
+</select>
+</div>
+
+<div>
+<label>Language</label>
+<select id="language">
+<option>English</option>
+<option>Nigerian English / Pidgin</option>
+</select>
+</div>
+
+<div>
+<label>Episode</label>
+<select id="episode">
+<option>Episode 1</option>
+<option>Standalone</option>
+<option>Continue a series</option>
+</select>
+</div>
+
+</div>
+
+<button class="primary" onclick="makeDrama()">
+✨ GENERATE WITH REAL AI
+</button>
+
+<div id="status" class="status"></div>
+
+</div>
+
+<div id="out" class="hidden"></div>
+
+</div>
+
+<script>
+
+let pkg=null;
+
+const $=x=>document.getElementById(x);
+
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({
+'&':'&amp;',
+'<':'&lt;',
+'>':'&gt;',
+'"':'&quot;',
+"'":'&#39;'
+}[c]));
+
+async function makeDrama(){
+
+const idea=$("idea").value.trim();
+
+if(!idea){
+alert("Enter a story idea.");
+return;
+}
+
+$("status").textContent="AI is writing your drama…";
+
+try{
+
+const r=await fetch("/api/drama",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+
+idea,
+genre:$("genre").value,
+length:$("length").value,
+setting:$("setting").value,
+format:$("format").value,
+language:$("language").value,
+episode:$("episode").value
+
+})
+});
+
+const d=await r.json();
+
+if(!r.ok){
+throw Error(d.error||"Generation failed");
+}
+
+pkg=d;
+
+render(d);
+
+$("status").textContent="✅ Real AI drama generated.";
+
+}catch(e){
+
+$("status").textContent="❌ "+e.message;
+
+}
+
+}
+
+function render(d){
+
+$("out").classList.remove("hidden");
+
+$("out").innerHTML=`
+
+<div class="card">
+
+<span class="pill">${esc(d.episode)}</span>
+
+<span class="pill">${esc(d.format)}</span>
+
+<h2>🎬 ${esc(d.title)}</h2>
+
+<div class="box">
+
+<b>🔥 Hook</b>
+
+<p>${esc(d.hook)}</p>
+
+</div>
+
+<p>${esc(d.synopsis)}</p>
+
+<h3>👥 Characters</h3>
+
+${d.characters.map(c=>`
+
+<div class="box">
+
+<b>${esc(c.name)}</b> — ${esc(c.role)}
+
+<br>
+
+${esc(c.visual_identity)}
+
+<br>
+
+<span class="small">
+
+Personality: ${esc(c.personality)}
+
+<br>
+
+Voice: ${esc(c.voice)}
+
+</span>
+
+</div>
+
+`).join("")}
+
+<h3>🎥 Scenes</h3>
+
+${d.scenes.map(s=>`
+
+<div class="scene">
+
+<b class="gold">
+SCENE ${s.number}: ${esc(s.title)}
+</b>
+
+<div class="small">
+${s.duration_seconds}s · ${esc(s.location)}
+</div>
+
+<p>${esc(s.action)}</p>
+
+<div class="box mono">
+
+<b>Dialogue</b>
+
+${esc(s.dialogue)}
+
+</div>
+
+<div class="box small">
+
+<b>Camera:</b> ${esc(s.camera)}
+
+<br>
+
+<b>Sound:</b> ${esc(s.sound)}
+
+<br>
+
+<b>Video prompt:</b> ${esc(s.video_prompt)}
+
+</div>
+
+<button class="dark" onclick="renderVideo(${s.number})">
+
+🎥 RENDER THIS SCENE
+
+</button>
+
+<div id="vid${s.number}"></div>
+
+</div>
+
+`).join("")}
+
+<h3>🔁 Continuity Bible</h3>
+
+<div class="box mono">
+
+${esc(d.continuity_bible)}
+
+</div>
+
+<h3>😱 Cliffhanger</h3>
+
+<p>${esc(d.cliffhanger)}</p>
+
+</div>
+
+`;
+
+window.scrollTo({
+top:$("out").offsetTop-8,
+behavior:"smooth"
+});
+
+}
+
+async function renderVideo(n){
+
+const s=pkg.scenes.find(x=>x.number===n);
+
+const holder=$("vid"+n);
+
+holder.innerHTML="<p class='gold'>Creating video job…</p>";
+
+try{
+
+const size=pkg.format.includes("9:16")
+?"720x1280"
+:"1280x720";
+
+const r=await fetch("/api/video",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+prompt:s.video_prompt,
+
+seconds:Math.min(
+12,
+Math.max(4,s.duration_seconds)
+),
+
+size
+
+})
+
+});
+
+const v=await r.json();
+
+if(!r.ok){
+throw Error(v.error||"Video failed");
+}
+
+holder.innerHTML=`
+
+<p class="small">
+
+Job ${esc(v.id)} —
+
+<span id="st${n}">
+
+${esc(v.status)}
+
+</span>
+
+</p>
+
+<button class="dark"
+onclick="pollVideo('${esc(v.id)}',${n})">
+
+🔄 CHECK VIDEO
+
+</button>
+
+`;
+
+}catch(e){
+
+holder.innerHTML=
+"<p class='gold'>❌ "+esc(e.message)+"</p>";
+
+}
+
+}
+
+async function pollVideo(id,n){
+
+const holder=$("vid"+n);
+
+const r=await fetch(
+"/api/video/"+encodeURIComponent(id)
+);
+
+const v=await r.json();
+
+if(v.status==="completed"){
+
+holder.innerHTML=`
+
+<p class="gold">
+✅ Video completed.
+</p>
+
+<video
+class="video"
+controls
+src="/api/video/${encodeURIComponent(id)}/content">
+</video>
+
+`;
+
+}else{
+
+holder.innerHTML=`
+
+<p class="small">
+
+Status: ${esc(v.status)}
+
+${v.progress!=null
+?" · "+v.progress+"%"
+:""}
+
+</p>
+
+<button class="dark"
+onclick="pollVideo('${esc(id)}',${n})">
+
+🔄 CHECK AGAIN
+
+</button>
+
+`;
+
+}
+
+}
+
+</script>
+
+</body>
+  </html>
